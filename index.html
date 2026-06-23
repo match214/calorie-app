@@ -196,6 +196,14 @@ function renderPie(labels, values) {
 // ✅ Initial load
 loadData();
 </script>
+<hr>
+<div style="font-size:12px; color:gray;">
+  Version 1.0.0
+</div>
 
+<div style="font-size:12px; color:gray;">
+  Version 1.0.0 | Last updated: <span id="versionTime"></span>
+</div>
+document.getElementById("versionTime").innerText = new Date().toLocaleString();
 </body>
 </html>
