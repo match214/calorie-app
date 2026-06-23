@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Test</title>
+</head>
+
+<body>
+
+<button onclick="test()">Test Connection</button>
+
+<script>
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyv3PzeI1hEm-OmobXrQ-zcwr5WnSSGHvb_Ul7rRnbD_GmQjF7HB6Fg7dKi-RsFkysI/exec";
+
+function test() {
+  console.log("Button clicked");
+
+  fetch(SCRIPT_URL)
+    .then(res => res.text())
+    .then(text => {
+      console.log("Response:", text);
+      alert(text);
+    })
+    .catch(err => {
+      console.error(err);
+      alert("Failed");
+    });
+}
+</script>
+
+</body>
+</html>
