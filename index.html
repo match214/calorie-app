@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Calorie Tracker</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body style="font-family:sans-serif; max-width:600px; margin:auto;">
+
+<h1>Calorie Tracker</h1>
+
+<!-- FORM -->
+<input id="name" placeholder="Food"><br>
+<input id="calories" placeholder="Calories" type="number"><br>
+<input id="protein" placeholder="Protein" type="number"><br>
+<input id="carbs" placeholder="Carbs" type="number"><br>
+<input id="fat" placeholder="Fat" type="number"><br>
+
+<select id="source">
+  <option>Home</option>
+  <option>Restaurant</option>
+  <option>Snack</option>
+  <option>Drink</option>
+</select><br><br>
+
+<button onclick="addEntry()">Add</button>
+
+<hr>
+
+<!-- DATE FILTER -->
+<h3>Date Range</h3>
+From: <input type="date" id="startDate">
+To: <input type="date" id="endDate">
+
+<button onclick="loadData()">Apply</button>
+<button onclick="setRange(7)">Last 7 Days</button>
+<button onclick="setRange(30)">Last 30 Days</button>
+
+<hr>
+
+<!-- TOTALS -->
+<h3>Totals</h3>
+<div>Calories: <span id="total"></span></div>
+<div>Protein: <span id="proteinTotal"></span></div>
+<div>Carbs: <span id="carbsTotal"></span></div>
+<div>Fat: <span id="fatTotal"></span></div>
+
+<hr>
+
+<h3>Calories Over Time</h3>
+<canvas id="chart"></canvas>
+
+<h3>Calories by Source</h3>
+<canvas id="pie"></canvas>
+
+<script>
+const SCRIPT_URL = "YOUR_SCRIPT_URL";
+
+async function addEntry() {
+  const data = {
+    date: new Date().toISOString().slice(0,10),
+    name: document.getElementById("name").value,
+    calories: Number(document.getElementById("calories").value),
+    protein: Number(document.getElementById("protein").value) || 0,
+    carbs: Number(document.getElementById("carbs").value) || 0,
+    fat: Number(document.getElementById("fat").value) || 0,
+    source: document.getElementById("source").value
+  };
+
+  const response = await fetch(SCRIPT_URL, {
+    method: "POST",
+    body: JSON.stringify(data)
+  });
+
+  const text = await response.text();
+  console.log("Response from script:", text);
+
+  alert(text); // ✅ now shows real result (e.g. "Success")
+
+  // ✅ Clear inputs (optional but helpful)
+  document.getElementById("name").value = "";
+  document.getElementById("calories").value = "";
+  document.getElementById("protein").value = "";
+  document.getElementById("carbs").value = "";
+  document.getElementById("fat").value = "";
+}
+  // Clear inputs
+  document.getElementById("name").value = "";
+  document.getElementById("calories").value = "";
+  document.getElementById("protein").value = "";
+  document.getElementById("carbs").value = "";
+  document.getElementById("fat").value = "";
+
+  loadData();
+}
+
+async function loadData() {
+  const res = await fetch(SCRIPT_URL);
+  const data = await res.json();
+
+  const start = document.getElementById("startDate").value;
+  const end = document.getElementById("endDate").value;
+
+  const filtered = data.filter(e => {
+    if (!start || !end) return true;
+    return e.date >= start && e.date <= end;
+  });
+
+  // ✅ TOTALS
+  const totals = filtered.reduce((sum, e) => ({
+    calories: sum.calories + Number(e.calories),
+    protein: sum.protein + Number(e.protein),
+    carbs: sum.carbs + Number(e.carbs),
+    fat: sum.fat + Number(e.fat)
+  }), { calories: 0, protein: 0, carbs: 0, fat: 0 });
+
+  document.getElementById("total").innerText = totals.calories;
+  document.getElementById("proteinTotal").innerText = totals.protein;
+  document.getElementById("carbsTotal").innerText = totals.carbs;
+  document.getElementById("fatTotal").innerText = totals.fat;
+
+  // ✅ GROUP BY DATE
+  const byDate = {};
+  filtered.forEach(e => {
+    if (!byDate[e.date]) byDate[e.date] = 0;
+    byDate[e.date] += Number(e.calories);
+  });
+
+  const labels = Object.keys(byDate);
+  const values = Object.values(byDate);
+
+  renderChart(labels, values);
+
+  // ✅ GROUP BY SOURCE (PIE)
+  const bySource = {};
+  filtered.forEach(e => {
+    if (!bySource[e.source]) bySource[e.source] = 0;
+    bySource[e.source] += Number(e.calories);
+  });
+
+  const sourceLabels = Object.keys(bySource);
+  const sourceValues = Object.values(bySource);
+
+  renderPie(sourceLabels, sourceValues);
+}
+
+function setRange(days) {
+  const end = new Date();
+  const start = new Date();
+  start.setDate(end.getDate() - days);
+
+  document.getElementById("startDate").value = start.toISOString().slice(0,10);
+  document.getElementById("endDate").value = end.toISOString().slice(0,10);
+
+  loadData();
+}
+
+let chart;
+let pie;
+
+function renderChart(labels, values) {
+  const ctx = document.getElementById("chart");
+
+  if (chart) chart.destroy();
+
+  chart = new Chart(ctx, {
+    type: "line",
+    data: {
+      labels: labels,
+      datasets: [{
+        label: "Calories",
+        data: values,
+        borderWidth: 2
+      }]
+    }
+  });
+}
+
+function renderPie(labels, values) {
+  const ctx = document.getElementById("pie");
+
+  if (pie) pie.destroy();
+
+  pie = new Chart(ctx, {
+    type: "pie",
+    data: {
+      labels: labels,
+      datasets: [{
+        data: values
+      }]
+    }
+  });
+}
+
+// ✅ Initial load
+loadData();
+</script>
+
+</body>
+</html>
