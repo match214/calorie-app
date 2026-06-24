@@ -103,7 +103,11 @@ const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyRojJQkoNQjm7acHrM4
 /* ---------- ADD ENTRY ---------- */
 function addEntry() {
   const now = new Date();
-  const date = now.toISOString().slice(0,10);
+  
+const date =
+  now.getFullYear() + "-" +
+  String(now.getMonth() + 1).padStart(2, "0") + "-" +
+  String(now.getDate()).padStart(2, "0");
 
   const data = {
     date,
