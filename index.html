@@ -176,6 +176,10 @@ function renderChart(data) {
 
   // ✅ SORT DATES
   const labels = Object.keys(byDate).sort();
+  const calories = labels.map(d => byDate[d].calories / cGoal);
+const protein  = labels.map(d => byDate[d].protein / pGoal);
+const carbs    = labels.map(d => byDate[d].carbs / carbGoal);
+const fat      = labels.map(d => byDate[d].fat / fGoal);
 
   const values = labels.map(d => byDate[d]);
 
