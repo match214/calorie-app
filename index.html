@@ -167,26 +167,33 @@ let chart, pie, goalChart;
 
 function renderChart(data) {
   const byDate = {};
+
   data.forEach(e => {
     const d = e.date.slice(0,10);
     if (!byDate[d]) byDate[d] = 0;
     byDate[d] += Number(e.calories);
   });
 
+  // ✅ SORT DATES
+  const labels = Object.keys(byDate).sort();
+
+  const values = labels.map(d => byDate[d]);
+
   if (chart) chart.destroy();
 
   chart = new Chart(document.getElementById("chart"), {
     type: "line",
     data: {
-      labels: Object.keys(byDate),
+      labels,
       datasets: [{
         label: "Calories",
-        data: Object.values(byDate),
+        data: values,
         borderColor: "blue"
       }]
     }
   });
 }
+
 
 
 /* ---------- PIE ---------- */
