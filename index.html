@@ -211,18 +211,42 @@ function renderPie(data) {
 
 /* ---------- GOAL CHART ---------- */
 function renderGoalChart(data) {
-  const goal = Number(goalCalories.value);
 
+  const cGoal = Number(goalCalories.value);
+  const pGoal = Number(goalProtein.value);
+  const carbGoal = Number(goalCarbs.value);
+  const fGoal = Number(goalFat.value);
+
+  // group daily totals
   const byDate = {};
+
   data.forEach(e => {
     const d = e.date.slice(0,10);
-    if (!byDate[d]) byDate[d] = 0;
-    byDate[d] += Number(e.calories);
+
+    if (!byDate[d]) {
+      byDate[d] = {
+        calories: 0,
+        protein: 0,
+        carbs: 0,
+        fat: 0
+      };
+    }
+
+    byDate[d].calories += Number(e.calories);
+    byDate[d].protein += Number(e.protein);
+    byDate[d].carbs += Number(e.carbs);
+    byDate[d].fat += Number(e.fat);
   });
 
   const labels = Object.keys(byDate);
-  const calories = Object.values(byDate);
-  const goalLine = labels.map(() => goal);
+
+  const calories = labels.map(d => byDate[d].calories / cGoal);
+  const protein = labels.map(d => byDate[d].protein / pGoal);
+  const carbs = labels.map(d => byDate[d].carbs / carbGoal);
+  const fat = labels.map(d => byDate[d].fat / fGoal);
+
+  // goal line = 100%
+  const goalLine = labels.map(() => 1);
 
   if (goalChart) goalChart.destroy();
 
@@ -232,19 +256,41 @@ function renderGoalChart(data) {
       labels,
       datasets: [
         {
-          label: "Calories",
+          label: "Calories %",
           data: calories,
-          borderColor: "blue",
-          borderWidth: 2
+          borderColor: "blue"
         },
         {
-          label: "Goal",
+          label: "Protein %",
+          data: protein,
+          borderColor: "green"
+        },
+        {
+          label: "Carbs %",
+          data: carbs,
+          borderColor: "orange"
+        },
+        {
+          label: "Fat %",
+          data: fat,
+          borderColor: "purple"
+        },
+        {
+          label: "Goal (100%)",
           data: goalLine,
-          borderColor: "red",
-          borderDash: [5,5],
-          borderWidth: 2
+          borderColor: "black",
+          borderDash: [5,5]
         }
       ]
+    },
+    options: {
+      scales: {
+        y: {
+          ticks: {
+            callback: value => Math.round(value * 100) + "%"
+          }
+        }
+      }
     }
   });
 }
