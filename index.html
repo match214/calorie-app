@@ -167,7 +167,21 @@ function handleData(data){
 /* ---------- PROCESS ---------- */
 function processData(data){
 
-  const filtered = data.filter(e => e.name && Number(e.calories) > 0);
+const start = startDate.value;
+const end = endDate.value;
+
+function normalize(d) {
+  return new Date(d).toISOString().slice(0,10);
+}
+
+const filtered = data
+  .filter(e => e.name && Number(e.calories) > 0)
+  .filter(e => {
+    if (!start || !end) return true;
+
+    const d = normalize(e.date);
+    return d >= start && d <= end;
+  });
 
   const totals = filtered.reduce((s,e)=>({
     calories:s.calories+Number(e.calories),
