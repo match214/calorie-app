@@ -29,21 +29,13 @@ Calories Quick:
 <button onclick="quickSet('calories',600)">600</button>
 <br><br>
 
-Calories: <span id="caloriesDisplay">0</span><br>
-<input id="calories" type="number" value="0" oninput="syncSlider('calories')">
-<input id="caloriesSlider" type="range" min="0" max="2000" value="0" oninput="syncInput('calories')"><br>
+<input id="caloriesSlider" type="range" min="0" max="1000" value="0" oninput="syncInput('calories')">
 
-Protein: <span id="proteinDisplay">0</span><br>
-<input id="protein" type="number" value="0" oninput="syncSlider('protein')">
-<input id="proteinSlider" type="range" min="0" max="200" value="0" oninput="syncInput('protein')"><br>
+<input id="proteinSlider" type="range" min="0" max="100" value="0" oninput="syncInput('protein')">
 
-Carbs: <span id="carbsDisplay">0</span><br>
-<input id="carbs" type="number" value="0" oninput="syncSlider('carbs')">
-<input id="carbsSlider" type="range" min="0" max="300" value="0" oninput="syncInput('carbs')"><br>
+<input id="carbsSlider" type="range" min="0" max="200" value="0" oninput="syncInput('carbs')">
 
-Fat: <span id="fatDisplay">0</span><br>
-<input id="fat" type="number" value="0" oninput="syncSlider('fat')">
-<input id="fatSlider" type="range" min="0" max="150" value="0" oninput="syncInput('fat')"><br><br>
+<input id="fatSlider" type="range" min="0" max="100" value="0" oninput="syncInput('fat')">
 
 <select id="source">
   <option>Breakfast</option>
@@ -167,7 +159,7 @@ function handleData(data){
 
 /* ---------- PROCESS ---------- */
 function processData(data){
-  const filtered=data.filter(e=>e.name && Number(e.calories)>0);
+  const filtered=data.filter(e=>e.name && e.source && Number(e.calories) > 0;
 
   const totals=filtered.reduce((s,e)=>({
     calories:s.calories+Number(e.calories),
@@ -176,10 +168,14 @@ function processData(data){
     fat:s.fat+Number(e.fat)
   }),{calories:0,protein:0,carbs:0,fat:0});
 
-  total.innerText=totals.calories;
-  proteinTotal.innerText=totals.protein;
-  carbsTotal.innerText=totals.carbs;
-  fatTotal.innerText=totals.fat;
+  function round(val){
+  return Math.round(val * 10) / 10;
+}
+
+total.innerText = round(totals.calories);
+proteinTotal.innerText = round(totals.protein);
+carbsTotal.innerText = round(totals.carbs);
+fatTotal.innerText = round(totals.fat);
 
   renderChart(filtered);
   renderBar(filtered);
@@ -225,19 +221,28 @@ function renderBar(data){
   const bySource={};
 
   data.forEach(e=>{
+    if(!e.source) return; // ✅ ignore bad rows
+
     if(!bySource[e.source]) bySource[e.source]=0;
     bySource[e.source]+=Number(e.calories);
   });
 
-  const labels=order.filter(s=>bySource[s]);
-  const values=labels.map(s=>bySource[s]);
-  const bg=labels.map(s=>colors[s]);
+  const labels = order.filter(s => bySource[s] > 0);
+  const values = labels.map(s => bySource[s]);
+  const bg = labels.map(s => colors[s]);
 
   if(pie) pie.destroy();
 
-  pie=new Chart(chartCanvas("pie"),{
+  pie = new Chart(chartCanvas("pie"),{
     type:"bar",
-    data:{labels,datasets:[{data:values,backgroundColor:bg}]}
+    data:{
+      labels,
+      datasets:[{
+        label:"Calories",
+        data:values,
+        backgroundColor:bg
+      }]
+    }
   });
 }
 
