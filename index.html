@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Calorie Tracker</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body style="font-family:sans-serif; max-width:700px; margin:auto;">
+
+<h1>Calorie Tracker</h1>
+
+<div id="saveMsg" style="background:#d4edda; padding:8px; display:none;">
+  ✅ Saved!
+</div>
+
+<h3>Daily Goals</h3>
+Calories: <input id="goalCalories" type="number" value="2200"><br>
+Protein: <input id="goalProtein" type="number" value="150"><br>
+Carbs: <input id="goalCarbs" type="number" value="275"><br>
+Fat: <input id="goalFat" type="number" value="70"><br><br>
+
+<input id="nameInput" placeholder="Food"><br><br>
+
+Calories Quick:
+<button onclick="quickSet('calories',200)">200</button>
+<button onclick="quickSet('calories',400)">400</button>
+<button onclick="quickSet('calories',600)">600</button>
+<br><br>
+
+<!-- INPUTS -->
+Calories: <span id="caloriesDisplay">0</span><br>
+<input id="calories" type="number" value="0" oninput="syncSlider('calories')">
+<input id="caloriesSlider" type="range" min="0" max="1000" oninput="syncInput('calories')"><br><br>
+
+Protein: <span id="proteinDisplay">0</span><br>
+<input id="protein" type="number" value="0" oninput="syncSlider('protein')">
+<input id="proteinSlider" type="range" min="0" max="100" oninput="syncInput('protein')"><br><br>
+
+Carbs: <span id="carbsDisplay">0</span><br>
+<input id="carbs" type="number" value="0" oninput="syncSlider('carbs')">
+<input id="carbsSlider" type="range" min="0" max="200" oninput="syncInput('carbs')"><br><br>
+
+Fat: <span id="fatDisplay">0</span><br>
+<input id="fat" type="number" value="0" oninput="syncSlider('fat')">
+<input id="fatSlider" type="range" min="0" max="100" oninput="syncInput('fat')"><br><br>
+
+<select id="source">
+  <option>Breakfast</option>
+  <option>Lunch</option>
+  <option>Dinner</option>
+  <option>Dessert</option>
+  <option>Snack</option>
+  <option>Drink</option>
+</select><br><br>
+
+<button onclick="addEntry()">Add</button>
+
+<hr>
+
+<form id="postForm"
+  action="https://script.google.com/macros/s/AKfycbyRojJQkoNQjm7acHrM402DNUZeuksdxLhr-AYWy_KiCpWIt4HUhegwNjn1bHlAiWU3/exec"
+  method="POST"
+  target="hiddenFrame">
+  <input type="hidden" name="data" id="formData">
+</form>
+
+<iframe name="hiddenFrame" style="display:none;"></iframe>
+
+<hr>
+
+<h3>Date Range</h3>
+From: <input type="date" id="startDate">
+To: <input type="date" id="endDate">
+<button onclick="loadData()">Apply</button>
+<button onclick="setRange(7)">Last 7 Days</button>
+
+<hr>
+
+<b>Today</b><br>
+Calories: <span id="todayCalories"></span><br>
+Protein: <span id="todayProtein"></span><br>
+Carbs: <span id="todayCarbs"></span><br>
+Fat: <span id="todayFat"></span><br>
+
+<hr>
+
+<h3>Calories Over Time</h3>
+<canvas id="chart"></canvas>
+
+<h3>Calories by Category</h3>
+<canvas id="pie"></canvas>
+
+<h3>Performance</h3>
+<canvas id="goalChart"></canvas>
+
+<hr>
+
+<pre id="debug" style="font-size:10px"></pre>
+
+<script>
+const SCRIPT_URL="https://script.google.com/macros/s/AKfycbyRojJQkoNQjm7acHrM402DNUZeuksdxLhr-AYWy_KiCpWIt4HUhegwNjn1bHlAiWU3/exec";
+
+/* ---------- ADD ---------- */
+function addEntry(){
+  const date=new Date().toISOString().slice(0,10);
+
+  const data={
+    date,
+    name:nameInput.value.trim(),
+    calories:Number(calories.value)||0,
+    protein:Number(protein.value)||0,
+    carbs:Number(carbs.value)||0,
+    fat:Number(fat.value)||0,
+    source:source.value
+  };
+
+  if(!data.name){alert("Enter food");return;}
+
+  formData.value=JSON.stringify(data);
+  postForm.submit();
+
+  saveMsg.style.display="block";
+  setTimeout(()=>saveMsg.style.display="none",1500);
+
+  ["calories","protein","carbs","fat"].forEach(f=>{
+    document.getElementById(f).value=0;
+    document.getElementById(f+"Slider").value=0;
+    document.getElementById(f+"Display").innerText=0;
+  });
+
+  nameInput.value="";
+  setTimeout(loadData,600);
+}
+
+/* ---------- SYNC ---------- */
+function syncSlider(f){
+  const v=document.getElementById(f).value||0;
+  document.getElementById(f+"Slider").value=v;
+  document.getElementById(f+"Display").innerText=v;
+}
+function syncInput(f){
+  const v=document.getElementById(f+"Slider").value;
+  document.getElementById(f).value=v;
+  document.getElementById(f+"Display").innerText=v;
+}
+function quickSet(f,v){
+  document.getElementById(f).value=v;
+  syncSlider(f);
+}
+
+/* ---------- LOAD ---------- */
+function loadData(){
+  const s=document.createElement("script");
+  s.src=SCRIPT_URL+"?callback=handleData&cb="+Date.now();
+  document.body.appendChild(s);
+}
+
+function handleData(data){
+  debug.innerText=JSON.stringify(data,null,2);
+  processData(data);
+}
+
+/* ---------- PROCESS ---------- */
+function processData(data){
+
+  const start=startDate.value;
+  const end=endDate.value;
+
+  const filtered=data
+    .filter(e=>e.name && e.source && Number(e.calories)>0)
+    .filter(e=>{
+      if(!start||!end) return true;
+      return e.date>=start && e.date<=end;
+    });
+
+  // TODAY (not affected by range)
+  const today=new Date().toISOString().slice(0,10);
+
+  const todayTotals=data
+    .filter(e=>e.date===today)
+    .reduce((s,e)=>({
+      calories:s.calories+Number(e.calories),
+      protein:s.protein+Number(e.protein),
+      carbs:s.carbs+Number(e.carbs),
+      fat:s.fat+Number(e.fat)
+    }),{calories:0,protein:0,carbs:0,fat:0});
+
+  function r(v){return Math.round(v*10)/10;}
+  function pct(a,b){return Math.round((a/b)*100)||0;}
+
+  todayCalories.innerText=`${r(todayTotals.calories)} / ${goalCalories.value} (${pct(todayTotals.calories,goalCalories.value)}%)`;
+  todayProtein.innerText=`${r(todayTotals.protein)} / ${goalProtein.value} (${pct(todayTotals.protein,goalProtein.value)}%)`;
+  todayCarbs.innerText=`${r(todayTotals.carbs)} / ${goalCarbs.value} (${pct(todayTotals.carbs,goalCarbs.value)}%)`;
+  todayFat.innerText=`${r(todayTotals.fat)} / ${goalFat.value} (${pct(todayTotals.fat,goalFat.value)}%)`;
+
+  renderChart(filtered);
+  renderBar(filtered);
+  renderGoalChart(filtered);
+}
+
+/* ---------- CHARTS ---------- */
+let chart,pie,goalChart;
+
+function renderChart(data){
+  const byDate={};
+  data.forEach(e=>{
+    if(!byDate[e.date]) byDate[e.date]=0;
+    byDate[e.date]+=Number(e.calories);
+  });
+
+  const labels=Object.keys(byDate).sort();
+
+  if(chart) chart.destroy();
+  chart=new Chart(chart,{
+    type:"line",
+    data:{labels,
+      datasets:[{label:"Calories",data:labels.map(d=>byDate[d])}]
+    }
+  });
+}
+
+function renderBar(data){
+  const order=["Breakfast","Lunch","Snack","Dinner","Dessert","Drink"];
+  const colors={Breakfast:"red",Lunch:"orange",Snack:"yellow",Dinner:"green",Dessert:"blue",Drink:"purple"};
+
+  const bySource={};
+  data.forEach(e=>{
+    if(!order.includes(e.source))return;
+    if(!bySource[e.source])bySource[e.source]=0;
+    bySource[e.source]+=Number(e.calories);
+  });
+
+  if(pie) pie.destroy();
+  pie=new Chart(pie,{
+    type:"bar",
+    data:{
+      labels:order.filter(s=>bySource[s]),
+      datasets:[{
+        data:order.filter(s=>bySource[s]).map(s=>bySource[s]),
+        backgroundColor:order.filter(s=>bySource[s]).map(s=>colors[s])
+      }]
+    }
+  });
+}
+
+function renderGoalChart(data){
+  const c=goalCalories.value;
+
+  const byDate={};
+  data.forEach(e=>{
+    if(!byDate[e.date]) byDate[e.date]=0;
+    byDate[e.date]+=Number(e.calories);
+  });
+
+  const labels=Object.keys(byDate).sort();
+
+  if(goalChart) goalChart.destroy();
+  goalChart=new Chart(goalChart,{
+    type:"line",
+    data:{
+      labels,
+      datasets:[
+        {label:"Calories %",data:labels.map(d=>byDate[d]/c)},
+        {label:"Goal",data:labels.map(()=>1),borderDash:[5,5]}
+      ]
+    },
+    options:{
+      scales:{y:{ticks:{callback:v=>Math.round(v*100)+"%"}}}
+    }
+  });
+}
+
+function setRange(days){
+  const end=new Date(),start=new Date();
+  start.setDate(end.getDate()-days);
+
+  startDate.value=start.toISOString().slice(0,10);
+  endDate.value=end.toISOString().slice(0,10);
+
+  loadData();
+}
+
+loadData();
+</script>
+
+<div style="margin-top:10px; color:gray;">Version 13.0 ✅</div>
+
+</body>
+</html>
