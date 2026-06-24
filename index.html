@@ -17,11 +17,40 @@ Carbs: <input id="goalCarbs" type="number" value="275"><br>
 Fat: <input id="goalFat" type="number" value="70"><br><br>
 
 <!-- FORM -->
-<input id="name" placeholder="Food"><br>
-<input id="calories" type="number" placeholder="Calories"><br>
-<input id="protein" type="number" placeholder="Protein"><br>
-<input id="carbs" type="number" placeholder="Carbs"><br>
-<input id="fat" type="number" placeholder="Fat"><br>
+Calories:
+<input id="calories" type="number" value="0" oninput="syncSlider('calories')">
+<input id="caloriesSlider" type="range" min="0" max="2000" value="0" oninput="syncInput('calories')">
+<br>
+
+Protein:
+<input id="protein" type="number" value="0" oninput="syncSlider('protein')">
+<input id="proteinSlider" type="range" min="0" max="200" value="0" oninput="syncInput('protein')">
+<br>
+
+Carbs:
+<input id="carbs" type="number" value="0" oninput="syncSlider('carbs')">
+<input id="carbsSlider" type="range" min="0" max="300" value="0" oninput="syncInput('carbs')">
+<br>
+
+Fat:
+<input id="fat" type="number" value="0" oninput="syncSlider('fat')">
+<input id="fatSlider" type="range" min="0" max="150" value="0" oninput="syncInput('fat')">
+<br><br>
+
+ function syncSlider(field) {
+  const input = document.getElementById(field);
+  const slider = document.getElementById(field + "Slider");
+
+  slider.value = input.value || 0;
+}
+
+function syncInput(field) {
+  const input = document.getElementById(field);
+  const slider = document.getElementById(field + "Slider");
+
+  input.value = slider.value;
+}
+``
 
 <select id="source">
   <option>Breakfast</option>
@@ -98,6 +127,11 @@ function addEntry() {
   postForm.submit();
 
   setTimeout(loadData, 500);
+  ["calories","protein","carbs","fat"].forEach(f => {
+  document.getElementById(f).value = 0;
+  document.getElementById(f + "Slider").value = 0;
+});
+``
 }
 
 /* ---------- LOAD (JSONP) ---------- */
