@@ -284,20 +284,65 @@ function renderGoalChart(data){
 
   if(goalChart) goalChart.destroy();
 
+function renderGoalChart(data){
+
+  const c=goalCalories.value,
+        p=goalProtein.value,
+        carbG=goalCarbs.value,
+        f=goalFat.value;
+
+  const byDate={};
+
+  data.forEach(e=>{
+    const d=e.date.slice(0,10);
+    if(!byDate[d]) byDate[d]={c:0,p:0,carb:0,f:0};
+
+    byDate[d].c+=Number(e.calories);
+    byDate[d].p+=Number(e.protein);
+    byDate[d].carb+=Number(e.carbs);
+    byDate[d].f+=Number(e.fat);
+  });
+
+  const labels=Object.keys(byDate).sort();
+
+  const cal = labels.map(d=>byDate[d].c/c);
+  const pro = labels.map(d=>byDate[d].p/p);
+  const carb = labels.map(d=>byDate[d].carb/carbG);
+  const fat = labels.map(d=>byDate[d].f/f);
+
+  if(goalChart) goalChart.destroy();
+
   goalChart=new Chart(chartCanvas("goalChart"),{
     type:"line",
     data:{
       labels,
       datasets:[
-        {label:"Calories %",data:labels.map(d=>byDate[d].c/c),borderColor:"red"},
-        {label:"Protein %",data:labels.map(d=>byDate[d].p/p),borderColor:"green"},
-        {label:"Carbs %",data:labels.map(d=>byDate[d].carb/carbG),borderColor:"orange"},
-        {label:"Fat %",data:labels.map(d=>byDate[d].f/f),borderColor:"purple"}
+        {label:"Calories %",data:cal,borderColor:"red"},
+        {label:"Protein %",data:pro,borderColor:"green"},
+        {label:"Carbs %",data:carb,borderColor:"orange"},
+        {label:"Fat %",data:fat,borderColor:"purple"},
+        
+        // ✅ Goal line at 100%
+        {
+          label:"Goal",
+          data:labels.map(()=>1),
+          borderColor:"black",
+          borderDash:[5,5]
+        }
       ]
+    },
+    options:{
+      scales:{
+        y:{
+          // ✅ NO fixed min/max → dynamic scaling preserved
+          ticks:{
+            callback:value => Math.round(value * 100) + "%"
+          }
+        }
+      }
     }
   });
 }
-
 function chartCanvas(id){
   return document.getElementById(id);
 }
