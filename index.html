@@ -174,15 +174,18 @@ function processData(data){
 const start = startDate.value;
 const end = endDate.value;
 
+
 function normalize(d) {
-  return new Date(d).toISOString().slice(0,10);
+  return d.slice(0,10);
 }
+
 
 const start = startDate.value;
 const end = endDate.value;
 
+
 function normalize(d) {
-  return new Date(d).toISOString().slice(0,10);
+  return d.slice(0,10);
 }
 
 const filtered = data
