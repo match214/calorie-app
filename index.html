@@ -7,12 +7,23 @@
   <style>
     body {
       font-family: sans-serif;
-      max-width: 700px;
+      max-width: 720px;
       margin: auto;
     }
-    input, select, button {
-      margin-top: 4px;
+
+    .row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 6px;
     }
+
+    .label { width: 80px; }
+    .num { width: 70px; }
+    .slider { flex: 1; }
+    .val { width: 40px; text-align: right; }
+
+    input, select, button { margin-top: 4px; }
   </style>
 </head>
 
@@ -32,36 +43,50 @@ Iron: <input id="goalIron" type="number" value="10"><br><br>
 
 <input id="nameInput" placeholder="Food"><br><br>
 
-<!-- INPUTS -->
-Calories:
-<input id="calories" type="number" value="0" style="width:80px;" oninput="syncSlider('calories')">
-<input id="caloriesSlider" type="range" min="0" max="1000" value="0" oninput="syncInput('calories')" style="width:200px;">
-<span id="caloriesDisplay">0</span><br>
+<!-- INPUT ROWS -->
+<div class="row">
+  <div class="label">Calories</div>
+  <input id="calories" class="num" type="number" value="0" oninput="syncSlider('calories')">
+  <input id="caloriesSlider" class="slider" type="range" min="0" max="1000" value="0" oninput="syncInput('calories')">
+  <div id="caloriesDisplay" class="val">0</div>
+</div>
 
-Protein:
-<input id="protein" type="number" value="0" style="width:80px;" oninput="syncSlider('protein')">
-<input id="proteinSlider" type="range" min="0" max="100" value="0" oninput="syncInput('protein')" style="width:200px;">
-<span id="proteinDisplay">0</span><br>
+<div class="row">
+  <div class="label">Protein</div>
+  <input id="protein" class="num" type="number" value="0" oninput="syncSlider('protein')">
+  <input id="proteinSlider" class="slider" type="range" min="0" max="100" value="0" oninput="syncInput('protein')">
+  <div id="proteinDisplay" class="val">0</div>
+</div>
 
-Carbs:
-<input id="carbs" type="number" value="0" style="width:80px;" oninput="syncSlider('carbs')">
-<input id="carbsSlider" type="range" min="0" max="200" value="0" oninput="syncInput('carbs')" style="width:200px;">
-<span id="carbsDisplay">0</span><br>
+<div class="row">
+  <div class="label">Carbs</div>
+  <input id="carbs" class="num" type="number" value="0" oninput="syncSlider('carbs')">
+  <input id="carbsSlider" class="slider" type="range" min="0" max="200" value="0" oninput="syncInput('carbs')">
+  <div id="carbsDisplay" class="val">0</div>
+</div>
 
-Fat:
-<input id="fat" type="number" value="0" style="width:80px;" oninput="syncSlider('fat')">
-<input id="fatSlider" type="range" min="0" max="100" value="0" oninput="syncInput('fat')" style="width:200px;">
-<span id="fatDisplay">0</span><br>
+<div class="row">
+  <div class="label">Fat</div>
+  <input id="fat" class="num" type="number" value="0" oninput="syncSlider('fat')">
+  <input id="fatSlider" class="slider" type="range" min="0" max="100" value="0" oninput="syncInput('fat')">
+  <div id="fatDisplay" class="val">0</div>
+</div>
 
-Fiber:
-<input id="fiber" type="number" value="0" style="width:80px;" oninput="syncSlider('fiber')">
-<input id="fiberSlider" type="range" min="0" max="50" value="0" oninput="syncInput('fiber')" style="width:200px;">
-<span id="fiberDisplay">0</span><br>
+<div class="row">
+  <div class="label">Fiber</div>
+  <input id="fiber" class="num" type="number" value="0" oninput="syncSlider('fiber')">
+  <input id="fiberSlider" class="slider" type="range" min="0" max="50" value="0" oninput="syncInput('fiber')">
+  <div id="fiberDisplay" class="val">0</div>
+</div>
 
-Iron:
-<input id="iron" type="number" value="0" style="width:80px;" oninput="syncSlider('iron')">
-<input id="ironSlider" type="range" min="0" max="30" value="0" oninput="syncInput('iron')" style="width:200px;">
-<span id="ironDisplay">0</span><br><br>
+<div class="row">
+  <div class="label">Iron</div>
+  <input id="iron" class="num" type="number" value="0" oninput="syncSlider('iron')">
+  <input id="ironSlider" class="slider" type="range" min="0" max="30" value="0" oninput="syncInput('iron')">
+  <div id="ironDisplay" class="val">0</div>
+</div>
+
+<br>
 
 <select id="source">
   <option>Breakfast</option>
@@ -119,7 +144,6 @@ let chart, pie;
 /* HELPERS */
 function round(v){ return Math.round(v*10)/10; }
 function pct(v,g){ return Math.round((v/g)*100)||0; }
-
 function color(v,g){
   const p=v/g;
   return p<.5?"red":p<.75?"orange":p<.9?"gold":"green";
@@ -218,7 +242,7 @@ function process(data){
     iron:sum(t,"iron")
   };
 
-  todayStats.innerHTML=
+  todayStats.innerHTML =
   `Calories <span style="color:${color(tVals.cal,goalCalories.value)}">${round(tVals.cal)}/${goalCalories.value} (${pct(tVals.cal,goalCalories.value)}%)</span> |
    Protein <span style="color:${color(tVals.pro,goalProtein.value)}">${round(tVals.pro)}/${goalProtein.value}</span> |
    Carbs <span style="color:${color(tVals.carb,goalCarbs.value)}">${round(tVals.carb)}/${goalCarbs.value}</span> |
@@ -226,93 +250,5 @@ function process(data){
    Fiber <span style="color:${color(tVals.fiber,goalFiber.value)}">${round(tVals.fiber)}/${goalFiber.value}</span> |
    Iron <span style="color:${color(tVals.iron,goalIron.value)}">${round(tVals.iron)}/${goalIron.value}</span>`;
 
-  const days=[...new Set(clean.map(e=>e.date))];
-  const n=days.length||1;
-
-  const avg={
-    cal:sum(clean,"calories")/n,
-    pro:sum(clean,"protein")/n,
-    carb:sum(clean,"carbs")/n,
-    fat:sum(clean,"fat")/n,
-    fiber:sum(clean,"fiber")/n,
-    iron:sum(clean,"iron")/n
-  };
-
-  avgStats.innerHTML=
-  `Calories <span style="color:${color(avg.cal,goalCalories.value)}">${round(avg.cal)}/${goalCalories.value}</span> |
-   Protein <span style="color:${color(avg.pro,goalProtein.value)}">${round(avg.pro)}/${goalProtein.value}</span> |
-   Carbs <span style="color:${color(avg.carb,goalCarbs.value)}">${round(avg.carb)}/${goalCarbs.value}</span> |
-   Fat <span style="color:${color(avg.fat,goalFat.value)}">${round(avg.fat)}/${goalFat.value}</span> |
-   Fiber <span style="color:${color(avg.fiber,goalFiber.value)}">${round(avg.fiber)}/${goalFiber.value}</span> |
-   Iron <span style="color:${color(avg.iron,goalIron.value)}">${round(avg.iron)}/${goalIron.value}</span>`;
-
-  /* PERFORMANCE CHART */
-  const byDate={};
-  clean.forEach(e=>{
-    if(!byDate[e.date]){
-      byDate[e.date]={cal:0,pro:0,carb:0,fat:0,fiber:0,iron:0};
-    }
-    byDate[e.date].cal+=+e.calories||0;
-    byDate[e.date].pro+=+e.protein||0;
-    byDate[e.date].carb+=+e.carbs||0;
-    byDate[e.date].fat+=+e.fat||0;
-    byDate[e.date].fiber+=+e.fiber||0;
-    byDate[e.date].iron+=+e.iron||0;
-  });
-
-  const labels=Object.keys(byDate).sort();
-
-  if(chart) chart.destroy();
-  chart=new Chart(document.getElementById("chart"),{
-    type:"line",
-    data:{
-      labels,
-      datasets:[
-        {label:"Calories %",data:labels.map(d=>byDate[d].cal/goalCalories.value),borderColor:"red"},
-        {label:"Protein %",data:labels.map(d=>byDate[d].pro/goalProtein.value),borderColor:"green"},
-        {label:"Carbs %",data:labels.map(d=>byDate[d].carb/goalCarbs.value),borderColor:"orange"},
-        {label:"Fat %",data:labels.map(d=>byDate[d].fat/goalFat.value),borderColor:"purple"},
-        {label:"Fiber %",data:labels.map(d=>byDate[d].fiber/goalFiber.value),borderColor:"brown"},
-        {label:"Iron %",data:labels.map(d=>byDate[d].iron/goalIron.value),borderColor:"teal"},
-        {label:"Goal",data:labels.map(()=>1),borderDash:[5,5],borderColor:"black"}
-      ]
-    },
-    options:{
-      scales:{ y:{ ticks:{ callback:v=>Math.round(v*100)+"%" } } }
-    }
-  });
-
-  const order=["Breakfast","Lunch","Snack","Dinner","Dessert","Drink"];
-  const bySource={};
-
-  clean.forEach(e=>{
-    if(!order.includes(e.source)) return;
-    if(!bySource[e.source]) bySource[e.source]=0;
-    bySource[e.source]+=+e.calories||0;
-  });
-
-  if(pie) pie.destroy();
-  pie=new Chart(document.getElementById("pie"),{
-    type:"bar",
-    data:{
-      labels:order.filter(s=>bySource[s]),
-      datasets:[{data:order.filter(s=>bySource[s]).map(s=>bySource[s])}]
-    }
-  });
 }
-
-function setRange(d){
-  let end=new Date(),start=new Date();
-  start.setDate(end.getDate()-d);
-  startDate.value=start.toISOString().slice(0,10);
-  endDate.value=end.toISOString().slice(0,10);
-  loadData();
-}
-
-loadData();
-</script>
-
-<div style="color:gray;">Version 28 ✅</div>
-
-</body>
-</html>
+``
