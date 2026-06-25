@@ -192,7 +192,7 @@ function process(data){
 
   const labels=Object.keys(byDate).sort();
 
-  if(window.chart) chart.destroy();
+ if(chart) chart.destroy();
   chart = new Chart(document.getElementById("chart"),{
     type:"line",
     data:{
@@ -214,7 +214,7 @@ function process(data){
     bySource[e.source]+=+e.calories;
   });
 
-  if(window.pie) pie.destroy();
+  if(pie) pie.destroy();
   pie = new Chart(document.getElementById("pie"),{
     type:"bar",
     data:{
@@ -243,7 +243,7 @@ function setRange(d){
 
 loadData();
 </script>
-<div style="color:gray; margin-top:10px;">Version 24.3 ✅</div>
+<div style="color:gray; margin-top:10px;">Version 24.4 ✅</div>
 </body>
 </html>
 
