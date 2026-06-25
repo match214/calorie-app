@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Calorie Tracker</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body style="font-family:sans-serif; max-width:700px; margin:auto;">
+
+<h1>Calorie Tracker</h1>
+
+<div id="saveMsg" style="display:none;background:#d4edda;padding:8px;">✅ Saved!</div>
+
+<h3>Daily Goals</h3>
+Calories: <input id="goalCalories" type="number" value="2200"><br>
+Protein: <input id="goalProtein" type="number" value="150"><br>
+Carbs: <input id="goalCarbs" type="number" value="275"><br>
+Fat: <input id="goalFat" type="number" value="70"><br>
+Fiber: <input id="goalFiber" type="number" value="25"><br>
+Iron: <input id="goalIron" type="number" value="10"><br><br>
+
+<input id="nameInput" placeholder="Food"><br><br>
+
+<!-- INPUTS -->
+Calories: <input id="calories" type="number" value="0"><br>
+Protein: <input id="protein" type="number" value="0"><br>
+Carbs: <input id="carbs" type="number" value="0"><br>
+Fat: <input id="fat" type="number" value="0"><br>
+Fiber: <input id="fiber" type="number" value="0"><br>
+Iron: <input id="iron" type="number" value="0"><br><br>
+
+<select id="source">
+  <option>Breakfast</option>
+  <option>Lunch</option>
+  <option>Dinner</option>
+  <option>Dessert</option>
+  <option>Snack</option>
+  <option>Drink</option>
+</select><br><br>
+
+<button onclick="addEntry()">Add</button>
+
+<hr>
+
+<form id="postForm"
+  action="https://script.google.com/macros/s/AKfycbyRojJQkoNQjm7acHrM402DNUZeuksdxLhr-AYWy_KiCpWIt4HUhegwNjn1bHlAiWU3/exec"
+  method="POST"
+  target="hiddenFrame">
+  <input type="hidden" name="data" id="formData">
+</form>
+
+<iframe name="hiddenFrame" style="display:none;"></iframe>
+
+<hr>
+
+<h3>Date Range</h3>
+From: <input type="date" id="startDate">
+To: <input type="date" id="endDate">
+<button onclick="loadData()">Apply</button>
+<button onclick="setRange(7)">Last 7 Days</button>
+
+<hr>
+
+<b>Today</b>
+<div id="todayStats"></div>
+
+<b>Average</b>
+<div id="avgStats"></div>
+
+<hr>
+
+<canvas id="chart" height="200"></canvas>
+<canvas id="pie" height="200"></canvas>
+
+<hr>
+
+<pre id="debug"></pre>
+
+<script>
+const URL = "https://script.google.com/macros/s/AKfycbyRojJQkoNQjm7acHrM402DNUZeuksdxLhr-AYWy_KiCpWIt4HUhegwNjn1bHlAiWU3/exec";
+let chart, pie;
+/* HELPERS */
+function round(v){ return Math.round(v*10)/10; }
+function pct(v,g){ return Math.round((v/g)*100)||0; }
+function color(v,g){
+  const p=v/g;
+  return p<.5?"red":p<.75?"orange":p<.9?"gold":"green";
+}
+
+/* ADD ENTRY */
+function addEntry(){
+
+  const data = {
+    date:new Date().toISOString().slice(0,10),
+    name:nameInput.value.trim(),
+    calories:+calories.value||0,
+    protein:+protein.value||0,
+    carbs:+carbs.value||0,
+    fat:+fat.value||0,
+    fiber:+fiber.value||0,
+    iron:+iron.value||0,
+    source:source.value
+  };
+
+  if(!data.name){ alert("Enter food"); return; }
+
+  formData.value = JSON.stringify(data);
+  postForm.submit();
+
+  saveMsg.style.display="block";
+  setTimeout(()=>saveMsg.style.display="none",1000);
+
+  setTimeout(loadData,700);
+}
+
+/* LOAD */
+function loadData(){
+  const s=document.createElement("script");
+  s.src = URL + "?callback=handleData&cb=" + Date.now();
+  document.body.appendChild(s);
+}
+
+function handleData(data){
+  debug.innerText = JSON.stringify(data,null,2);
+  process(data);
+}
+
+/* PROCESS */
+function process(data){
+
+  const clean=data.map(e=>({
+    ...e,
+    date:e.date.slice(0,10),
+    fiber:+e.fiber||0,
+    iron:+e.iron||0
+  }));
+
+  const sum=(arr,k)=>arr.reduce((s,e)=>s+(+e[k]||0),0);
+
+  /* TODAY */
+  const today=new Date().toISOString().slice(0,10);
+  const t=clean.filter(e=>e.date===today);
+
+  const tVals={
+    cal:sum(t,"calories"),
+    pro:sum(t,"protein"),
+    carb:sum(t,"carbs"),
+    fat:sum(t,"fat"),
+    fiber:sum(t,"fiber"),
+    iron:sum(t,"iron")
+  };
+
+  todayStats.innerHTML=
+  `Calories <span style="color:${color(tVals.cal,goalCalories.value)}">${round(tVals.cal)}/${goalCalories.value} (${pct(tVals.cal,goalCalories.value)}%)</span> |
+   Protein <span style="color:${color(tVals.pro,goalProtein.value)}">${round(tVals.pro)}/${goalProtein.value}</span> |
+   Carbs <span style="color:${color(tVals.carb,goalCarbs.value)}">${round(tVals.carb)}/${goalCarbs.value}</span> |
+   Fat <span style="color:${color(tVals.fat,goalFat.value)}">${round(tVals.fat)}/${goalFat.value}</span> |
+   Fiber <span style="color:${color(tVals.fiber,goalFiber.value)}">${round(tVals.fiber)}/${goalFiber.value}</span> |
+   Iron <span style="color:${color(tVals.iron,goalIron.value)}">${round(tVals.iron)}/${goalIron.value}</span>`;
+
+  /* AVERAGE */
+  const days=[...new Set(clean.map(e=>e.date))];
+  const n=days.length||1;
+
+  const avg={
+    cal:sum(clean,"calories")/n,
+    pro:sum(clean,"protein")/n,
+    carb:sum(clean,"carbs")/n,
+    fat:sum(clean,"fat")/n,
+    fiber:sum(clean,"fiber")/n,
+    iron:sum(clean,"iron")/n
+  };
+
+  avgStats.innerHTML=
+  `Calories <span style="color:${color(avg.cal,goalCalories.value)}">${round(avg.cal)}/${goalCalories.value}</span> |
+   Protein <span style="color:${color(avg.pro,goalProtein.value)}">${round(avg.pro)}/${goalProtein.value}</span> |
+   Carbs <span style="color:${color(avg.carb,goalCarbs.value)}">${round(avg.carb)}/${goalCarbs.value}</span> |
+   Fat <span style="color:${color(avg.fat,goalFat.value)}">${round(avg.fat)}/${goalFat.value}</span> |
+   Fiber <span style="color:${color(avg.fiber,goalFiber.value)}">${round(avg.fiber)}/${goalFiber.value}</span> |
+   Iron <span style="color:${color(avg.iron,goalIron.value)}">${round(avg.iron)}/${goalIron.value}</span>`;
+
+  /* PERFORMANCE CHART */
+try {
+
+  const byDate={};
+
+  clean.forEach(e=>{
+    if(!byDate[e.date]){
+      byDate[e.date]={
+        cal:0, pro:0, carb:0, fat:0, fiber:0, iron:0
+      };
+    }
+
+    byDate[e.date].cal += Number(e.calories)||0;
+    byDate[e.date].pro += Number(e.protein)||0;
+    byDate[e.date].carb += Number(e.carbs)||0;
+    byDate[e.date].fat += Number(e.fat)||0;
+    byDate[e.date].fiber += Number(e.fiber)||0;
+    byDate[e.date].iron += Number(e.iron)||0;
+  });
+
+  const labels = Object.keys(byDate).sort();
+
+  const calData   = labels.map(d => byDate[d].cal   / goalCalories.value);
+  const proData   = labels.map(d => byDate[d].pro   / goalProtein.value);
+  const carbData  = labels.map(d => byDate[d].carb  / goalCarbs.value);
+  const fatData   = labels.map(d => byDate[d].fat   / goalFat.value);
+  const fiberData = labels.map(d => byDate[d].fiber / goalFiber.value);
+  const ironData  = labels.map(d => byDate[d].iron  / goalIron.value);
+
+  if(chart) chart.destroy();
+
+  const ctx1 = document.getElementById("chart").getContext("2d");
+
+  chart = new Chart(ctx1,{
+    type:"line",
+    data:{
+      labels,
+      datasets:[
+        { label:"Calories %", data:calData, borderColor:"red" },
+        { label:"Protein %",  data:proData, borderColor:"green" },
+        { label:"Carbs %",   data:carbData, borderColor:"orange" },
+        { label:"Fat %",     data:fatData, borderColor:"purple" },
+        { label:"Fiber %",   data:fiberData, borderColor:"brown" },
+        { label:"Iron %",    data:ironData, borderColor:"teal" },
+        {
+          label:"Goal (100%)",
+          data:labels.map(()=>1),
+          borderDash:[5,5],
+          borderColor:"black"
+        }
+      ]
+    },
+    options:{
+      responsive:true,
+      scales:{
+        y:{
+          beginAtZero:true,
+          ticks:{
+            callback:v => Math.round(v*100) + "%"
+          }
+        }
+      }
+    }
+  });
+
+  /* BAR CHART (unchanged) */
+  const order=["Breakfast","Lunch","Snack","Dinner","Dessert","Drink"];
+  const bySource={};
+
+  clean.forEach(e=>{
+    if(!order.includes(e.source)) return;
+    if(!bySource[e.source]) bySource[e.source]=0;
+    bySource[e.source]+=Number(e.calories)||0;
+  });
+
+  if(pie) pie.destroy();
+  const ctx2 = document.getElementById("pie").getContext("2d");
+
+  pie = new Chart(ctx2,{
+    type:"bar",
+    data:{
+      labels:order.filter(s=>bySource[s]),
+      datasets:[{
+        label:"Calories",
+        data:order.filter(s=>bySource[s]).map(s=>bySource[s])
+      }]
+    }
+  });
+
+} catch (err) {
+  console.error("Chart error:", err);
+}
+``
+
+function setRange(d){
+  const end=new Date();
+  const start=new Date();
+  start.setDate(end.getDate()-d);
+
+  startDate.value=start.toISOString().slice(0,10);
+  endDate.value=end.toISOString().slice(0,10);
+
+  loadData();
+}
+
+loadData();
+</script>
+<div style="color:gray; margin-top:10px;">Version 25 ✅</div>
+</body>
+</html>
