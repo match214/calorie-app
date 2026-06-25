@@ -1,12 +1,24 @@
-
 <!DOCTYPE html>
 <html>
 <head>
   <title>Calorie Tracker</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <style>
+    body { font-family:sans-serif; max-width:700px; margin:auto; padding:10px; }
+    input, select, button {
+      width:100%;
+      padding:8px;
+      font-size:16px;
+      margin-top:4px;
+    }
+    input[type="range"] {
+      width:100%;
+    }
+  </style>
 </head>
 
-<body style="font-family:sans-serif; max-width:700px; margin:auto;">
+<body>
 
 <h1>Calorie Tracker</h1>
 
@@ -22,35 +34,29 @@ Iron: <input id="goalIron" type="number" value="10"><br><br>
 
 <input id="nameInput" placeholder="Food"><br><br>
 
-<!-- INPUTS -->
-<!-- CALORIES -->
-Calories: <span id="caloriesDisplay">0</span><br>
-<input id="calories" type="number" value="0" oninput="syncSlider('calories')">
-<input id="caloriesSlider" type="range" min="0" max="1000" value="0" oninput="syncInput('calories')"><br><br>
+<!-- INPUTS WITH SLIDERS -->
+Calories: <span id="caloriesDisplay">0</span>
+<input id="calories" type="number" value="0" inputmode="numeric" oninput="syncSlider('calories')">
+<input id="caloriesSlider" type="range" min="0" max="1000" value="0" oninput="syncInput('calories')"><br>
 
-<!-- PROTEIN -->
-Protein: <span id="proteinDisplay">0</span><br>
-<input id="protein" type="number" value="0" oninput="syncSlider('protein')">
-<input id="proteinSlider" type="range" min="0" max="100" value="0" oninput="syncInput('protein')"><br><br>
+Protein: <span id="proteinDisplay">0</span>
+<input id="protein" type="number" value="0" inputmode="numeric" oninput="syncSlider('protein')">
+<input id="proteinSlider" type="range" min="0" max="100" value="0" oninput="syncInput('protein')"><br>
 
-<!-- CARBS -->
-Carbs: <span id="carbsDisplay">0</span><br>
-<input id="carbs" type="number" value="0" oninput="syncSlider('carbs')">
-<input id="carbsSlider" type="range" min="0" max="200" value="0" oninput="syncInput('carbs')"><br><br>
+Carbs: <span id="carbsDisplay">0</span>
+<input id="carbs" type="number" value="0" inputmode="numeric" oninput="syncSlider('carbs')">
+<input id="carbsSlider" type="range" min="0" max="200" value="0" oninput="syncInput('carbs')"><br>
 
-<!-- FAT -->
-Fat: <span id="fatDisplay">0</span><br>
-<input id="fat" type="number" value="0" oninput="syncSlider('fat')">
-<input id="fatSlider" type="range" min="0" max="100" value="0" oninput="syncInput('fat')"><br><br>
+Fat: <span id="fatDisplay">0</span>
+<input id="fat" type="number" value="0" inputmode="numeric" oninput="syncSlider('fat')">
+<input id="fatSlider" type="range" min="0" max="100" value="0" oninput="syncInput('fat')"><br>
 
-<!-- FIBER -->
-Fiber: <span id="fiberDisplay">0</span><br>
-<input id="fiber" type="number" value="0" oninput="syncSlider('fiber')">
-<input id="fiberSlider" type="range" min="0" max="50" value="0" oninput="syncInput('fiber')"><br><br>
+Fiber: <span id="fiberDisplay">0</span>
+<input id="fiber" type="number" value="0" inputmode="numeric" oninput="syncSlider('fiber')">
+<input id="fiberSlider" type="range" min="0" max="50" value="0" oninput="syncInput('fiber')"><br>
 
-<!-- IRON -->
-Iron: <span id="ironDisplay">0</span><br>
-<input id="iron" type="number" value="0" oninput="syncSlider('iron')">
+Iron: <span id="ironDisplay">0</span>
+<input id="iron" type="number" value="0" inputmode="numeric" oninput="syncSlider('iron')">
 <input id="ironSlider" type="range" min="0" max="30" value="0" oninput="syncInput('iron')"><br><br>
 
 <select id="source">
@@ -102,7 +108,9 @@ To: <input type="date" id="endDate">
 
 <script>
 const URL = "https://script.google.com/macros/s/AKfycbyRojJQkoNQjm7acHrM402DNUZeuksdxLhr-AYWy_KiCpWIt4HUhegwNjn1bHlAiWU3/exec";
+
 let chart, pie;
+
 /* HELPERS */
 function round(v){ return Math.round(v*10)/10; }
 function pct(v,g){ return Math.round((v/g)*100)||0; }
@@ -110,6 +118,8 @@ function color(v,g){
   const p=v/g;
   return p<.5?"red":p<.75?"orange":p<.9?"gold":"green";
 }
+
+/* SLIDER SYNC */
 function syncSlider(id){
   const v = +document.getElementById(id).value || 0;
   document.getElementById(id+"Slider").value = v;
@@ -121,6 +131,17 @@ function syncInput(id){
   document.getElementById(id).value = v;
   document.getElementById(id+"Display").innerText = v;
 }
+
+/* ENTER SUBMIT */
+document.addEventListener("keydown", function(e){
+  if(e.key==="Enter"){
+    const active=document.activeElement;
+    if(active && active.type==="date") return;
+    e.preventDefault();
+    addEntry();
+  }
+});
+
 /* ADD ENTRY */
 function addEntry(){
 
@@ -144,34 +165,33 @@ function addEntry(){
   saveMsg.style.display="block";
   setTimeout(()=>saveMsg.style.display="none",1000);
 
-  // reset inputs
-// reset values
-["calories","protein","carbs","fat","fiber","iron"].forEach(id=>{
-  document.getElementById(id).value = 0;
-  document.getElementById(id+"Slider").value = 0;
-  document.getElementById(id+"Display").innerText = 0;
-});
+  // ✅ RESET
+  ["calories","protein","carbs","fat","fiber","iron"].forEach(id=>{
+    document.getElementById(id).value=0;
+    document.getElementById(id+"Slider").value=0;
+    document.getElementById(id+"Display").innerText=0;
+  });
 
-nameInput.value = "";
+  nameInput.value="";
+  nameInput.focus();
 
-// ✅ autofocus back to food field
-nameInput.focus();
+  window.scrollTo({top:0,behavior:"smooth"});
 
-nameInput.value = "";
-
-// reload data after reset
-setTimeout(loadData,700);
+  setTimeout(loadData,700);
 }
 
-/* LOAD */
+/* LOAD (bulletproof &) */
 function loadData(){
+  document.querySelectorAll(".data-script").forEach(s=>s.remove());
+
   const s=document.createElement("script");
+  s.className="data-script";
   s.src = URL + "?callback=handleData" + "&" + "cb=" + Date.now();
- document.body.appendChild(s);
+  document.body.appendChild(s);
 }
 
 function handleData(data){
-  debug.innerText = JSON.stringify(data,null,2);
+  debug.innerText=JSON.stringify(data,null,2);
   process(data);
 }
 
@@ -187,7 +207,6 @@ function process(data){
 
   const sum=(arr,k)=>arr.reduce((s,e)=>s+(+e[k]||0),0);
 
-  /* TODAY */
   const today=new Date().toISOString().slice(0,10);
   const t=clean.filter(e=>e.date===today);
 
@@ -200,143 +219,68 @@ function process(data){
     iron:sum(t,"iron")
   };
 
-  todayStats.innerHTML=
-  `Calories <span style="color:${color(tVals.cal,goalCalories.value)}">${round(tVals.cal)}/${goalCalories.value} (${pct(tVals.cal,goalCalories.value)}%)</span> |
-   Protein <span style="color:${color(tVals.pro,goalProtein.value)}">${round(tVals.pro)}/${goalProtein.value}</span> |
-   Carbs <span style="color:${color(tVals.carb,goalCarbs.value)}">${round(tVals.carb)}/${goalCarbs.value}</span> |
-   Fat <span style="color:${color(tVals.fat,goalFat.value)}">${round(tVals.fat)}/${goalFat.value}</span> |
-   Fiber <span style="color:${color(tVals.fiber,goalFiber.value)}">${round(tVals.fiber)}/${goalFiber.value}</span> |
-   Iron <span style="color:${color(tVals.iron,goalIron.value)}">${round(tVals.iron)}/${goalIron.value}</span>`;
-
-  /* AVERAGE */
-  const days=[...new Set(clean.map(e=>e.date))];
-  const n=days.length||1;
-
-  const avg={
-    cal:sum(clean,"calories")/n,
-    pro:sum(clean,"protein")/n,
-    carb:sum(clean,"carbs")/n,
-    fat:sum(clean,"fat")/n,
-    fiber:sum(clean,"fiber")/n,
-    iron:sum(clean,"iron")/n
-  };
-
-  avgStats.innerHTML=
-  `Calories <span style="color:${color(avg.cal,goalCalories.value)}">${round(avg.cal)}/${goalCalories.value}</span> |
-   Protein <span style="color:${color(avg.pro,goalProtein.value)}">${round(avg.pro)}/${goalProtein.value}</span> |
-   Carbs <span style="color:${color(avg.carb,goalCarbs.value)}">${round(avg.carb)}/${goalCarbs.value}</span> |
-   Fat <span style="color:${color(avg.fat,goalFat.value)}">${round(avg.fat)}/${goalFat.value}</span> |
-   Fiber <span style="color:${color(avg.fiber,goalFiber.value)}">${round(avg.fiber)}/${goalFiber.value}</span> |
-   Iron <span style="color:${color(avg.iron,goalIron.value)}">${round(avg.iron)}/${goalIron.value}</span>`;
+  todayStats.innerHTML =
+  `Calories ${round(tVals.cal)}/${goalCalories.value} |
+   Protein ${round(tVals.pro)}/${goalProtein.value} |
+   Carbs ${round(tVals.carb)}/${goalCarbs.value} |
+   Fat ${round(tVals.fat)}/${goalFat.value} |
+   Fiber ${round(tVals.fiber)}/${goalFiber.value} |
+   Iron ${round(tVals.iron)}/${goalIron.value}`;
 
   /* PERFORMANCE CHART */
-try {
+  try {
+    const byDate={};
+    clean.forEach(e=>{
+      if(!byDate[e.date]){
+        byDate[e.date]={cal:0,pro:0,carb:0,fat:0,fiber:0,iron:0};
+      }
+      byDate[e.date].cal+=+e.calories||0;
+      byDate[e.date].pro+=+e.protein||0;
+      byDate[e.date].carb+=+e.carbs||0;
+      byDate[e.date].fat+=+e.fat||0;
+      byDate[e.date].fiber+=+e.fiber||0;
+      byDate[e.date].iron+=+e.iron||0;
+    });
 
-  const byDate={};
+    const labels=Object.keys(byDate).sort();
 
-  clean.forEach(e=>{
-    if(!byDate[e.date]){
-      byDate[e.date]={
-        cal:0, pro:0, carb:0, fat:0, fiber:0, iron:0
-      };
-    }
-
-    byDate[e.date].cal += Number(e.calories)||0;
-    byDate[e.date].pro += Number(e.protein)||0;
-    byDate[e.date].carb += Number(e.carbs)||0;
-    byDate[e.date].fat += Number(e.fat)||0;
-    byDate[e.date].fiber += Number(e.fiber)||0;
-    byDate[e.date].iron += Number(e.iron)||0;
-  });
-
-  const labels = Object.keys(byDate).sort();
-
-  const calData   = labels.map(d => byDate[d].cal   / goalCalories.value);
-  const proData   = labels.map(d => byDate[d].pro   / goalProtein.value);
-  const carbData  = labels.map(d => byDate[d].carb  / goalCarbs.value);
-  const fatData   = labels.map(d => byDate[d].fat   / goalFat.value);
-  const fiberData = labels.map(d => byDate[d].fiber / goalFiber.value);
-  const ironData  = labels.map(d => byDate[d].iron  / goalIron.value);
-
-  if(chart) chart.destroy();
-
-  const ctx1 = document.getElementById("chart").getContext("2d");
-
-  chart = new Chart(ctx1,{
-    type:"line",
-    data:{
-      labels,
-      datasets:[
-        { label:"Calories %", data:calData, borderColor:"red" },
-        { label:"Protein %",  data:proData, borderColor:"green" },
-        { label:"Carbs %",   data:carbData, borderColor:"orange" },
-        { label:"Fat %",     data:fatData, borderColor:"purple" },
-        { label:"Fiber %",   data:fiberData, borderColor:"brown" },
-        { label:"Iron %",    data:ironData, borderColor:"teal" },
-        {
-          label:"Goal (100%)",
-          data:labels.map(()=>1),
-          borderDash:[5,5],
-          borderColor:"black"
-        }
-      ]
-    },
-    options:{
-      responsive:true,
-      scales:{
-        y:{
-          beginAtZero:true,
-          ticks:{
-            callback:v => Math.round(v*100) + "%"
-          }
+    if(chart) chart.destroy();
+    chart=new Chart(document.getElementById("chart").getContext("2d"),{
+      type:"line",
+      data:{
+        labels,
+        datasets:[
+          {label:"Calories %",data:labels.map(d=>byDate[d].cal/goalCalories.value),borderColor:"red"},
+          {label:"Protein %",data:labels.map(d=>byDate[d].pro/goalProtein.value),borderColor:"green"},
+          {label:"Carbs %",data:labels.map(d=>byDate[d].carb/goalCarbs.value),borderColor:"orange"},
+          {label:"Fat %",data:labels.map(d=>byDate[d].fat/goalFat.value),borderColor:"purple"},
+          {label:"Fiber %",data:labels.map(d=>byDate[d].fiber/goalFiber.value),borderColor:"brown"},
+          {label:"Iron %",data:labels.map(d=>byDate[d].iron/goalIron.value),borderColor:"teal"},
+          {label:"Goal",data:labels.map(()=>1),borderDash:[5,5],borderColor:"black"}
+        ]
+      },
+      options:{
+        scales:{
+          y:{ticks:{callback:v=>Math.round(v*100)+"%"}}
         }
       }
-    }
-  });
+    });
 
-  /* BAR CHART (unchanged) */
-  const order=["Breakfast","Lunch","Snack","Dinner","Dessert","Drink"];
-  const bySource={};
-
-  clean.forEach(e=>{
-    if(!order.includes(e.source)) return;
-    if(!bySource[e.source]) bySource[e.source]=0;
-    bySource[e.source]+=Number(e.calories)||0;
-  });
-
-  if(pie) pie.destroy();
-  const ctx2 = document.getElementById("pie").getContext("2d");
-
-  pie = new Chart(ctx2,{
-    type:"bar",
-    data:{
-      labels:order.filter(s=>bySource[s]),
-      datasets:[{
-        label:"Calories",
-        data:order.filter(s=>bySource[s]).map(s=>bySource[s])
-      }]
-    }
-  });
-
-} catch (err) {
-  console.error("Chart error:", err);
+  } catch(e){console.error(e);}
 }
 
-} // ✅ CLOSE process()
-
 function setRange(d){
-  const end=new Date();
-  const start=new Date();
+  let end=new Date(),start=new Date();
   start.setDate(end.getDate()-d);
-
   startDate.value=start.toISOString().slice(0,10);
   endDate.value=end.toISOString().slice(0,10);
-
   loadData();
 }
 
 loadData();
 </script>
-<div style="color:gray; margin-top:10px;">Version 25.4 ✅</div>
+
+<div style="color:gray; margin-top:10px;">Version 26 ✅</div>
+
 </body>
 </html>
