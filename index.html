@@ -23,12 +23,35 @@ Iron: <input id="goalIron" type="number" value="10"><br><br>
 <input id="nameInput" placeholder="Food"><br><br>
 
 <!-- INPUTS -->
-Calories: <input id="calories" type="number" value="0"><br>
-Protein: <input id="protein" type="number" value="0"><br>
-Carbs: <input id="carbs" type="number" value="0"><br>
-Fat: <input id="fat" type="number" value="0"><br>
-Fiber: <input id="fiber" type="number" value="0"><br>
-Iron: <input id="iron" type="number" value="0"><br><br>
+<!-- CALORIES -->
+Calories: <span id="caloriesDisplay">0</span><br>
+<input id="calories" type="number" value="0" oninput="syncSlider('calories')">
+<input id="caloriesSlider" type="range" min="0" max="1000" value="0" oninput="syncInput('calories')"><br><br>
+
+<!-- PROTEIN -->
+Protein: <span id="proteinDisplay">0</span><br>
+<input id="protein" type="number" value="0" oninput="syncSlider('protein')">
+<input id="proteinSlider" type="range" min="0" max="100" value="0" oninput="syncInput('protein')"><br><br>
+
+<!-- CARBS -->
+Carbs: <span id="carbsDisplay">0</span><br>
+<input id="carbs" type="number" value="0" oninput="syncSlider('carbs')">
+<input id="carbsSlider" type="range" min="0" max="200" value="0" oninput="syncInput('carbs')"><br><br>
+
+<!-- FAT -->
+Fat: <span id="fatDisplay">0</span><br>
+<input id="fat" type="number" value="0" oninput="syncSlider('fat')">
+<input id="fatSlider" type="range" min="0" max="100" value="0" oninput="syncInput('fat')"><br><br>
+
+<!-- FIBER -->
+Fiber: <span id="fiberDisplay">0</span><br>
+<input id="fiber" type="number" value="0" oninput="syncSlider('fiber')">
+<input id="fiberSlider" type="range" min="0" max="50" value="0" oninput="syncInput('fiber')"><br><br>
+
+<!-- IRON -->
+Iron: <span id="ironDisplay">0</span><br>
+<input id="iron" type="number" value="0" oninput="syncSlider('iron')">
+<input id="ironSlider" type="range" min="0" max="30" value="0" oninput="syncInput('iron')"><br><br>
 
 <select id="source">
   <option>Breakfast</option>
@@ -87,7 +110,17 @@ function color(v,g){
   const p=v/g;
   return p<.5?"red":p<.75?"orange":p<.9?"gold":"green";
 }
+function syncSlider(id){
+  const v = +document.getElementById(id).value || 0;
+  document.getElementById(id+"Slider").value = v;
+  document.getElementById(id+"Display").innerText = v;
+}
 
+function syncInput(id){
+  const v = +document.getElementById(id+"Slider").value;
+  document.getElementById(id).value = v;
+  document.getElementById(id+"Display").innerText = v;
+}
 /* ADD ENTRY */
 function addEntry(){
 
@@ -112,9 +145,17 @@ function addEntry(){
   setTimeout(()=>saveMsg.style.display="none",1000);
 
   // reset inputs
+// reset values
 ["calories","protein","carbs","fat","fiber","iron"].forEach(id=>{
   document.getElementById(id).value = 0;
+  document.getElementById(id+"Slider").value = 0;
+  document.getElementById(id+"Display").innerText = 0;
 });
+
+nameInput.value = "";
+
+// ✅ autofocus back to food field
+nameInput.focus();
 
 nameInput.value = "";
 
@@ -296,6 +337,6 @@ function setRange(d){
 
 loadData();
 </script>
-<div style="color:gray; margin-top:10px;">Version 25.3 ✅</div>
+<div style="color:gray; margin-top:10px;">Version 25.4 ✅</div>
 </body>
 </html>
