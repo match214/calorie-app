@@ -22,8 +22,6 @@
     .num { width: 70px; }
     .slider { flex: 1; }
     .val { width: 40px; text-align: right; }
-
-    input, select, button { margin-top: 4px; }
   </style>
 </head>
 
@@ -101,7 +99,6 @@ Iron: <input id="goalIron" type="number" value="10"><br><br>
 
 <hr>
 
-<!-- ✅ FIXED FORM -->
 <form id="postForm"
   action="https://script.google.com/macros/s/AKfycbyRojJQkoNQjm7acHrM402DNUZeuksdxLhr-AYWy_KiCpWIt4HUhegwNjn1bHlAiWU3/exec"
   method="POST"
@@ -146,6 +143,7 @@ function syncSlider(id){
   document.getElementById(id+"Slider").value=v;
   document.getElementById(id+"Display").innerText=v;
 }
+
 function syncInput(id){
   const v=+document.getElementById(id+"Slider").value;
   document.getElementById(id).value=v;
@@ -178,9 +176,6 @@ function addEntry(){
   formData.value=JSON.stringify(data);
   postForm.submit();
 
-  saveMsg.style.display="block";
-  setTimeout(()=>saveMsg.style.display="none",1000);
-
   ["calories","protein","carbs","fat","fiber","iron"].forEach(id=>{
     document.getElementById(id).value=0;
     document.getElementById(id+"Slider").value=0;
@@ -207,6 +202,7 @@ function handleData(d){
 }
 
 function process(data){
+
   const clean=data.map(e=>({
     ...e,
     date:e.date.slice(0,10),
@@ -219,19 +215,97 @@ function process(data){
   const today=new Date().toISOString().slice(0,10);
   const t=clean.filter(e=>e.date===today);
 
+  const tVals={
+    cal:sum(t,"calories"),
+    pro:sum(t,"protein"),
+    carb:sum(t,"carbs"),
+    fat:sum(t,"fat"),
+    fiber:sum(t,"fiber"),
+    iron:sum(t,"iron")
+  };
+
   todayStats.innerHTML =
-  `Calories ${round(sum(t,"calories"))} |
-   Protein ${round(sum(t,"protein"))} |
-   Carbs ${round(sum(t,"carbs"))} |
-   Fat ${round(sum(t,"fat"))} |
-   Fiber ${round(sum(t,"fiber"))} |
-   Iron ${round(sum(t,"iron"))}`;
+  `Calories <span style="color:${color(tVals.cal,goalCalories.value)}">${round(tVals.cal)}/${goalCalories.value} (${pct(tVals.cal,goalCalories.value)}%)</span> |
+   Protein <span style="color:${color(tVals.pro,goalProtein.value)}">${round(tVals.pro)}/${goalProtein.value}</span> |
+   Carbs <span style="color:${color(tVals.carb,goalCarbs.value)}">${round(tVals.carb)}/${goalCarbs.value}</span> |
+   Fat <span style="color:${color(tVals.fat,goalFat.value)}">${round(tVals.fat)}/${goalFat.value}</span> |
+   Fiber <span style="color:${color(tVals.fiber,goalFiber.value)}">${round(tVals.fiber)}/${goalFiber.value}</span> |
+   Iron <span style="color:${color(tVals.iron,goalIron.value)}">${round(tVals.iron)}/${goalIron.value}</span>`;
+
+  const days=[...new Set(clean.map(e=>e.date))];
+  const n=days.length||1;
+
+  const avg={
+    cal:sum(clean,"calories")/n,
+    pro:sum(clean,"protein")/n,
+    carb:sum(clean,"carbs")/n,
+    fat:sum(clean,"fat")/n,
+    fiber:sum(clean,"fiber")/n,
+    iron:sum(clean,"iron")/n
+  };
+
+  avgStats.innerHTML =
+  `Calories <span style="color:${color(avg.cal,goalCalories.value)}">${round(avg.cal)}/${goalCalories.value}</span> |
+   Protein <span style="color:${color(avg.pro,goalProtein.value)}">${round(avg.pro)}/${goalProtein.value}</span> |
+   Carbs <span style="color:${color(avg.carb,goalCarbs.value)}">${round(avg.carb)}/${goalCarbs.value}</span> |
+   Fat <span style="color:${color(avg.fat,goalFat.value)}">${round(avg.fat)}/${goalFat.value}</span> |
+   Fiber <span style="color:${color(avg.fiber,goalFiber.value)}">${round(avg.fiber)}/${goalFiber.value}</span> |
+   Iron <span style="color:${color(avg.iron,goalIron.value)}">${round(avg.iron)}/${goalIron.value}</span>`;
+
+  const byDate={};
+  clean.forEach(e=>{
+    if(!byDate[e.date]){
+      byDate[e.date]={cal:0,pro:0,carb:0,fat:0,fiber:0,iron:0};
+    }
+    byDate[e.date].cal+=+e.calories||0;
+    byDate[e.date].pro+=+e.protein||0;
+    byDate[e.date].carb+=+e.carbs||0;
+    byDate[e.date].fat+=+e.fat||0;
+    byDate[e.date].fiber+=+e.fiber||0;
+    byDate[e.date].iron+=+e.iron||0;
+  });
+
+  const labels=Object.keys(byDate).sort();
+
+  if(chart) chart.destroy();
+  chart = new Chart(document.getElementById("chart"), {
+    type:"line",
+    data:{
+      labels,
+      datasets:[
+        {label:"Calories %",data:labels.map(d=>byDate[d].cal/goalCalories.value),borderColor:"red"},
+        {label:"Protein %",data:labels.map(d=>byDate[d].pro/goalProtein.value),borderColor:"green"},
+        {label:"Carbs %",data:labels.map(d=>byDate[d].carb/goalCarbs.value),borderColor:"orange"},
+        {label:"Fat %",data:labels.map(d=>byDate[d].fat/goalFat.value),borderColor:"purple""Fiber %",data:labels.map(d=>byDate[d].fiber/goalFiber.value),borderColor:"brown"},
+        {label:"Iron %",data:labels.map(d=>byDate[d].iron/goalIron.value),borderColor:"teal"},
+        {label:"Goal",data:labels.map(()=>1),borderDash:[5,5],borderColor:"black"}
+      ]
+    },
+    options:{ scales:{ y:{ ticks:{ callback:v=>Math.round(v*100)+"%" } } } }
+  });
+
+  const order=["Breakfast","Lunch","Snack","Dinner","Dessert","Drink"];
+  const bySource={};
+  clean.forEach(e=>{
+    if(!order.includes(e.source)) return;
+    if(!bySource[e.source]) bySource[e.source]=0;
+    bySource[e.source]+=+e.calories||0;
+  });
+
+  if(pie) pie.destroy();
+  pie = new Chart(document.getElementById("pie"),{
+    type:"bar",
+    data:{
+      labels:order.filter(s=>bySource[s]),
+      datasets:[{data:order.filter(s=>bySource[s]).map(s=>bySource[s])}]
+    }
+  });
 }
 
 loadData();
 </script>
 
-<div style="color:gray;">Version 28.2 ✅</div>
+<div style="color:gray;">Version 28.4 ✅</div>
 
 </body>
 </html>
