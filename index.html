@@ -5,15 +5,13 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
   <style>
-    body { font-family:sans-serif; max-width:700px; margin:auto; padding:10px; }
-    input, select, button {
-      width:100%;
-      padding:8px;
-      font-size:16px;
-      margin-top:4px;
+    body {
+      font-family: sans-serif;
+      max-width: 700px;
+      margin: auto;
     }
-    input[type="range"] {
-      width:100%;
+    input, select, button {
+      margin-top: 4px;
     }
   </style>
 </head>
@@ -34,30 +32,36 @@ Iron: <input id="goalIron" type="number" value="10"><br><br>
 
 <input id="nameInput" placeholder="Food"><br><br>
 
-<!-- INPUTS WITH SLIDERS -->
-Calories: <span id="caloriesDisplay">0</span>
-<input id="calories" type="number" value="0" inputmode="numeric" oninput="syncSlider('calories')">
-<input id="caloriesSlider" type="range" min="0" max="1000" value="0" oninput="syncInput('calories')"><br>
+<!-- INPUTS -->
+Calories:
+<input id="calories" type="number" value="0" style="width:80px;" oninput="syncSlider('calories')">
+<input id="caloriesSlider" type="range" min="0" max="1000" value="0" oninput="syncInput('calories')" style="width:200px;">
+<span id="caloriesDisplay">0</span><br>
 
-Protein: <span id="proteinDisplay">0</span>
-<input id="protein" type="number" value="0" inputmode="numeric" oninput="syncSlider('protein')">
-<input id="proteinSlider" type="range" min="0" max="100" value="0" oninput="syncInput('protein')"><br>
+Protein:
+<input id="protein" type="number" value="0" style="width:80px;" oninput="syncSlider('protein')">
+<input id="proteinSlider" type="range" min="0" max="100" value="0" oninput="syncInput('protein')" style="width:200px;">
+<span id="proteinDisplay">0</span><br>
 
-Carbs: <span id="carbsDisplay">0</span>
-<input id="carbs" type="number" value="0" inputmode="numeric" oninput="syncSlider('carbs')">
-<input id="carbsSlider" type="range" min="0" max="200" value="0" oninput="syncInput('carbs')"><br>
+Carbs:
+<input id="carbs" type="number" value="0" style="width:80px;" oninput="syncSlider('carbs')">
+<input id="carbsSlider" type="range" min="0" max="200" value="0" oninput="syncInput('carbs')" style="width:200px;">
+<span id="carbsDisplay">0</span><br>
 
-Fat: <span id="fatDisplay">0</span>
-<input id="fat" type="number" value="0" inputmode="numeric" oninput="syncSlider('fat')">
-<input id="fatSlider" type="range" min="0" max="100" value="0" oninput="syncInput('fat')"><br>
+Fat:
+<input id="fat" type="number" value="0" style="width:80px;" oninput="syncSlider('fat')">
+<input id="fatSlider" type="range" min="0" max="100" value="0" oninput="syncInput('fat')" style="width:200px;">
+<span id="fatDisplay">0</span><br>
 
-Fiber: <span id="fiberDisplay">0</span>
-<input id="fiber" type="number" value="0" inputmode="numeric" oninput="syncSlider('fiber')">
-<input id="fiberSlider" type="range" min="0" max="50" value="0" oninput="syncInput('fiber')"><br>
+Fiber:
+<input id="fiber" type="number" value="0" style="width:80px;" oninput="syncSlider('fiber')">
+<input id="fiberSlider" type="range" min="0" max="50" value="0" oninput="syncInput('fiber')" style="width:200px;">
+<span id="fiberDisplay">0</span><br>
 
-Iron: <span id="ironDisplay">0</span>
-<input id="iron" type="number" value="0" inputmode="numeric" oninput="syncSlider('iron')">
-<input id="ironSlider" type="range" min="0" max="30" value="0" oninput="syncInput('iron')"><br><br>
+Iron:
+<input id="iron" type="number" value="0" style="width:80px;" oninput="syncSlider('iron')">
+<input id="ironSlider" type="range" min="0" max="30" value="0" oninput="syncInput('iron')" style="width:200px;">
+<span id="ironDisplay">0</span><br><br>
 
 <select id="source">
   <option>Breakfast</option>
@@ -94,9 +98,6 @@ To: <input type="date" id="endDate">
 <b>Today</b>
 <div id="todayStats"></div>
 
-<b>Average</b>
-<div id="avgStats"></div>
-
 <hr>
 
 <canvas id="chart" height="200"></canvas>
@@ -108,16 +109,10 @@ To: <input type="date" id="endDate">
 
 <script>
 const URL = "https://script.google.com/macros/s/AKfycbyRojJQkoNQjm7acHrM402DNUZeuksdxLhr-AYWy_KiCpWIt4HUhegwNjn1bHlAiWU3/exec";
-
 let chart, pie;
 
 /* HELPERS */
 function round(v){ return Math.round(v*10)/10; }
-function pct(v,g){ return Math.round((v/g)*100)||0; }
-function color(v,g){
-  const p=v/g;
-  return p<.5?"red":p<.75?"orange":p<.9?"gold":"green";
-}
 
 /* SLIDER SYNC */
 function syncSlider(id){
@@ -165,7 +160,7 @@ function addEntry(){
   saveMsg.style.display="block";
   setTimeout(()=>saveMsg.style.display="none",1000);
 
-  // ✅ RESET
+  // reset inputs
   ["calories","protein","carbs","fat","fiber","iron"].forEach(id=>{
     document.getElementById(id).value=0;
     document.getElementById(id+"Slider").value=0;
@@ -175,12 +170,10 @@ function addEntry(){
   nameInput.value="";
   nameInput.focus();
 
-  window.scrollTo({top:0,behavior:"smooth"});
-
   setTimeout(loadData,700);
 }
 
-/* LOAD (bulletproof &) */
+/* LOAD */
 function loadData(){
   document.querySelectorAll(".data-script").forEach(s=>s.remove());
 
@@ -210,26 +203,17 @@ function process(data){
   const today=new Date().toISOString().slice(0,10);
   const t=clean.filter(e=>e.date===today);
 
-  const tVals={
-    cal:sum(t,"calories"),
-    pro:sum(t,"protein"),
-    carb:sum(t,"carbs"),
-    fat:sum(t,"fat"),
-    fiber:sum(t,"fiber"),
-    iron:sum(t,"iron")
-  };
+  todayStats.innerText =
+    `Calories ${round(sum(t,"calories"))} |
+     Protein ${round(sum(t,"protein"))} |
+     Carbs ${round(sum(t,"carbs"))} |
+     Fat ${round(sum(t,"fat"))} |
+     Fiber ${round(sum(t,"fiber"))} |
+     Iron ${round(sum(t,"iron"))}`;
 
-  todayStats.innerHTML =
-  `Calories ${round(tVals.cal)}/${goalCalories.value} |
-   Protein ${round(tVals.pro)}/${goalProtein.value} |
-   Carbs ${round(tVals.carb)}/${goalCarbs.value} |
-   Fat ${round(tVals.fat)}/${goalFat.value} |
-   Fiber ${round(tVals.fiber)}/${goalFiber.value} |
-   Iron ${round(tVals.iron)}/${goalIron.value}`;
-
-  /* PERFORMANCE CHART */
   try {
     const byDate={};
+
     clean.forEach(e=>{
       if(!byDate[e.date]){
         byDate[e.date]={cal:0,pro:0,carb:0,fat:0,fiber:0,iron:0};
@@ -245,7 +229,7 @@ function process(data){
     const labels=Object.keys(byDate).sort();
 
     if(chart) chart.destroy();
-    chart=new Chart(document.getElementById("chart").getContext("2d"),{
+    chart = new Chart(document.getElementById("chart").getContext("2d"),{
       type:"line",
       data:{
         labels,
@@ -266,21 +250,23 @@ function process(data){
       }
     });
 
-  } catch(e){console.error(e);}
+  } catch(e){ console.error(e); }
 }
 
 function setRange(d){
   let end=new Date(),start=new Date();
   start.setDate(end.getDate()-d);
+
   startDate.value=start.toISOString().slice(0,10);
   endDate.value=end.toISOString().slice(0,10);
+
   loadData();
 }
 
 loadData();
 </script>
 
-<div style="color:gray; margin-top:10px;">Version 26 ✅</div>
+<div style="color:gray; margin-top:10px;">Version 27 ✅</div>
 
 </body>
 </html>
