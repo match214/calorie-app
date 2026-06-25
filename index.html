@@ -116,15 +116,17 @@ function addEntry(){
 
 /* LOAD */
 function loadData(){
-  const s=document.createElement("script");
+
+  // remove old scripts to prevent buildup
+  document.querySelectorAll(".data-script").forEach(s => s.remove());
+
+  const s = document.createElement("script");
+  s.className = "data-script";
   s.src = URL + "?callback=handleData&cb=" + Date.now();
+
   document.body.appendChild(s);
 }
 
-function handleData(data){
-  debug.innerText = JSON.stringify(data,null,2);
-  process(data);
-}
 
 /* PROCESS */
 function process(data){
