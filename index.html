@@ -111,7 +111,15 @@ function addEntry(){
   saveMsg.style.display="block";
   setTimeout(()=>saveMsg.style.display="none",1000);
 
-  setTimeout(loadData,700);
+  // reset inputs
+["calories","protein","carbs","fat","fiber","iron"].forEach(id=>{
+  document.getElementById(id).value = 0;
+});
+
+nameInput.value = "";
+
+// reload data after reset
+setTimeout(loadData,700);
 }
 
 /* LOAD */
@@ -288,6 +296,6 @@ function setRange(d){
 
 loadData();
 </script>
-<div style="color:gray; margin-top:10px;">Version 25.2 ✅</div>
+<div style="color:gray; margin-top:10px;">Version 25.3 ✅</div>
 </body>
 </html>
