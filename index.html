@@ -70,8 +70,8 @@ To: <input type="date" id="endDate">
 
 <hr>
 
-<canvas id="chart"></canvas>
-<canvas id="pie"></canvas>
+<canvas id="chart" height="200"></canvas>
+<canvas id="pie" height="200"></canvas>
 
 <hr>
 
@@ -181,6 +181,9 @@ function process(data){
    Iron <span style="color:${color(avg.iron,goalIron.value)}">${round(avg.iron)}/${goalIron.value}</span>`;
 
   /* LINE CHART */
+  try {
+
+  /* LINE CHART */
   const byDate={};
   clean.forEach(e=>{
     if(!byDate[e.date]) byDate[e.date]=0;
@@ -190,7 +193,7 @@ function process(data){
   const labels=Object.keys(byDate).sort();
 
   if(window.chart) chart.destroy();
-  chart=new Chart(document.getElementById("chart"),{
+  chart = new Chart(document.getElementById("chart"),{
     type:"line",
     data:{
       labels,
@@ -212,7 +215,7 @@ function process(data){
   });
 
   if(window.pie) pie.destroy();
-  pie=new Chart(document.getElementById("pie"),{
+  pie = new Chart(document.getElementById("pie"),{
     type:"bar",
     data:{
       labels:order.filter(s=>bySource[s]),
@@ -221,7 +224,11 @@ function process(data){
       }]
     }
   });
+
+} catch (err) {
+  console.error("Chart error:", err);
 }
+
 
 function setRange(d){
   const end=new Date();
@@ -239,3 +246,4 @@ loadData();
 
 </body>
 </html>
+<div style="color:gray; margin-top:10px;">Version 24.1 ✅</div>
