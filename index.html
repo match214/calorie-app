@@ -187,7 +187,7 @@ function process(data){
   const byDate={};
   clean.forEach(e=>{
     if(!byDate[e.date]) byDate[e.date]=0;
-    byDate[e.date]+=+e.calories;
+   byDate[e.date] += Number(e.calories) || 0;
   });
 
   const labels=Object.keys(byDate).sort();
