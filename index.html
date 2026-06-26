@@ -41,7 +41,7 @@ Iron: <input id="goalIron" type="number" value="10"><br><br>
 
 <input id="nameInput" placeholder="Food"><br><br>
 
-<!-- INPUT ROWS -->
+<!-- INPUTS -->
 <div class="row">
   <div class="label">Calories</div>
   <input id="calories" class="num" type="number" value="0" oninput="syncSlider('calories')">
@@ -138,18 +138,19 @@ function color(v,g){
   return p<.5?"red":p<.75?"orange":p<.9?"gold":"green";
 }
 
+/* sync */
 function syncSlider(id){
   const v=+document.getElementById(id).value||0;
   document.getElementById(id+"Slider").value=v;
   document.getElementById(id+"Display").innerText=v;
 }
-
 function syncInput(id){
   const v=+document.getElementById(id+"Slider").value;
   document.getElementById(id).value=v;
   document.getElementById(id+"Display").innerText=v;
 }
 
+/* enter submit */
 document.addEventListener("keydown",e=>{
   if(e.key==="Enter"){
     if(document.activeElement.type==="date") return;
@@ -158,6 +159,7 @@ document.addEventListener("keydown",e=>{
   }
 });
 
+/* add */
 function addEntry(){
   const data={
     date:new Date().toISOString().slice(0,10),
@@ -176,6 +178,9 @@ function addEntry(){
   formData.value=JSON.stringify(data);
   postForm.submit();
 
+  saveMsg.style.display="block";
+  setTimeout(()=>saveMsg.style.display="none",800);
+
   ["calories","protein","carbs","fat","fiber","iron"].forEach(id=>{
     document.getElementById(id).value=0;
     document.getElementById(id+"Slider").value=0;
@@ -188,11 +193,12 @@ function addEntry(){
   setTimeout(loadData,700);
 }
 
+/* load FIXED */
 function loadData(){
   document.querySelectorAll(".data-script").forEach(s=>s.remove());
   const s=document.createElement("script");
   s.className="data-script";
-  s.src=URL+"?callback=handleData"+"&"+"cb="+Date.now();
+  s.src = URL + "?callback=handleData" + "&" + "cb=" + Date.now();
   document.body.appendChild(s);
 }
 
@@ -201,6 +207,7 @@ function handleData(d){
   process(d);
 }
 
+/* process */
 function process(data){
 
   const clean=data.map(e=>({
@@ -215,42 +222,13 @@ function process(data){
   const today=new Date().toISOString().slice(0,10);
   const t=clean.filter(e=>e.date===today);
 
-  const tVals={
-    cal:sum(t,"calories"),
-    pro:sum(t,"protein"),
-    carb:sum(t,"carbs"),
-    fat:sum(t,"fat"),
-    fiber:sum(t,"fiber"),
-    iron:sum(t,"iron")
-  };
-
-  todayStats.innerHTML =
-  `Calories <span style="color:${color(tVals.cal,goalCalories.value)}">${round(tVals.cal)}/${goalCalories.value} (${pct(tVals.cal,goalCalories.value)}%)</span> |
-   Protein <span style="color:${color(tVals.pro,goalProtein.value)}">${round(tVals.pro)}/${goalProtein.value}</span> |
-   Carbs <span style="color:${color(tVals.carb,goalCarbs.value)}">${round(tVals.carb)}/${goalCarbs.value}</span> |
-   Fat <span style="color:${color(tVals.fat,goalFat.value)}">${round(tVals.fat)}/${goalFat.value}</span> |
-   Fiber <span style="color:${color(tVals.fiber,goalFiber.value)}">${round(tVals.fiber)}/${goalFiber.value}</span> |
-   Iron <span style="color:${color(tVals.iron,goalIron.value)}">${round(tVals.iron)}/${goalIron.value}</span>`;
-
-  const days=[...new Set(clean.map(e=>e.date))];
-  const n=days.length||1;
-
-  const avg={
-    cal:sum(clean,"calories")/n,
-    pro:sum(clean,"protein")/n,
-    carb:sum(clean,"carbs")/n,
-    fat:sum(clean,"fat")/n,
-    fiber:sum(clean,"fiber")/n,
-    iron:sum(clean,"iron")/n
-  };
-
-  avgStats.innerHTML =
-  `Calories <span style="color:${color(avg.cal,goalCalories.value)}">${round(avg.cal)}/${goalCalories.value}</span> |
-   Protein <span style="color:${color(avg.pro,goalProtein.value)}">${round(avg.pro)}/${goalProtein.value}</span> |
-   Carbs <span style="color:${color(avg.carb,goalCarbs.value)}">${round(avg.carb)}/${goalCarbs.value}</span> |
-   Fat <span style="color:${color(avg.fat,goalFat.value)}">${round(avg.fat)}/${goalFat.value}</span> |
-   Fiber <span style="color:${color(avg.fiber,goalFiber.value)}">${round(avg.fiber)}/${goalFiber.value}</span> |
-   Iron <span style="color:${color(avg.iron,goalIron.value)}">${round(avg.iron)}/${goalIron.value}</span>`;
+  todayStats.innerHTML=
+  `Calories <span style="color:${color(sum(t,"calories"),goalCalories.value)}">${round(sum(t,"calories"))}/${goalCalories.value}</span> |
+   Protein <span style="color:${color(sum(t,"protein"),goalProtein.value)}">${round(sum(t,"protein"))}</span> |
+   Carbs <span style="color:${color(sum(t,"carbs"),goalCarbs.value)}">${round(sum(t,"carbs"))}</span> |
+   Fat <span style="color:${color(sum(t,"fat"),goalFat.value)}">${round(sum(t,"fat"))}</span> |
+   Fiber <span style="color:${color(sum(t,"fiber"),goalFiber.value)}">${round(sum(t,"fiber"))}</span> |
+   Iron <span style="color:${color(sum(t,"iron"),goalIron.value)}">${round(sum(t,"iron"))}</span>`;
 
   const byDate={};
   clean.forEach(e=>{
@@ -268,7 +246,7 @@ function process(data){
   const labels=Object.keys(byDate).sort();
 
   if(chart) chart.destroy();
-  chart = new Chart(document.getElementById("chart"), {
+  chart=new Chart(document.getElementById("chart"),{
     type:"line",
     data:{
       labels,
@@ -276,16 +254,17 @@ function process(data){
         {label:"Calories %",data:labels.map(d=>byDate[d].cal/goalCalories.value),borderColor:"red"},
         {label:"Protein %",data:labels.map(d=>byDate[d].pro/goalProtein.value),borderColor:"green"},
         {label:"Carbs %",data:labels.map(d=>byDate[d].carb/goalCarbs.value),borderColor:"orange"},
-        {label:"Fat %",data:labels.map(d=>byDate[d].fat/goalFat.value),borderColor:"purple""Fiber %",data:labels.map(d=>byDate[d].fiber/goalFiber.value),borderColor:"brown"},
+        {label:"Fat %",data:labels.map(d=>byDate[d].fat/goalFat.value),borderColor:"purple"},
+        {label:"Fiber %",data:labels.map(d=>byDate[d].fiber/goalFiber.value),borderColor:"brown"},
         {label:"Iron %",data:labels.map(d=>byDate[d].iron/goalIron.value),borderColor:"teal"},
         {label:"Goal",data:labels.map(()=>1),borderDash:[5,5],borderColor:"black"}
       ]
-    },
-    options:{ scales:{ y:{ ticks:{ callback:v=>Math.round(v*100)+"%" } } } }
+    }
   });
 
   const order=["Breakfast","Lunch","Snack","Dinner","Dessert","Drink"];
   const bySource={};
+
   clean.forEach(e=>{
     if(!order.includes(e.source)) return;
     if(!bySource[e.source]) bySource[e.source]=0;
@@ -293,7 +272,7 @@ function process(data){
   });
 
   if(pie) pie.destroy();
-  pie = new Chart(document.getElementById("pie"),{
+  pie=new Chart(document.getElementById("pie"),{
     type:"bar",
     data:{
       labels:order.filter(s=>bySource[s]),
@@ -304,8 +283,6 @@ function process(data){
 
 loadData();
 </script>
-
-<div style="color:gray;">Version 28.4 ✅</div>
 
 </body>
 </html>
