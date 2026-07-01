@@ -243,21 +243,47 @@ function process(data){
     byDate[e.date].iron+=+e.iron||0;
   });
 /* ---------- 7-DAY ROLLING ---------- */
-const last7 = clean
-  .sort((a,b)=>a.date.localeCompare(b.date))
+/* ---------- 7-DAY DAILY AVERAGES ---------- */
+
+const daily = {};
+
+clean.forEach(e => {
+  if (!daily[e.date]) {
+    daily[e.date] = {
+      cal:0,
+      pro:0,
+      carb:0,
+      fat:0,
+      fiber:0,
+      iron:0
+    };
+  }
+
+  daily[e.date].cal += +e.calories || 0;
+  daily[e.date].pro += +e.protein || 0;
+  daily[e.date].carb += +e.carbs || 0;
+  daily[e.date].fat += +e.fat || 0;
+  daily[e.date].fiber += +e.fiber || 0;
+  daily[e.date].iron += +e.iron || 0;
+});
+
+const last7Days = Object.keys(daily)
+  .sort()
   .slice(-7);
 
+const daysCount = last7Days.length || 1;
+
 const r7 = {
-  cal:sum(last7,"calories")/7,
-  pro:sum(last7,"protein")/7,
-  carb:sum(last7,"carbs")/7,
-  fat:sum(last7,"fat")/7,
-  fiber:sum(last7,"fiber")/7,
-  iron:sum(last7,"iron")/7
+  cal: last7Days.reduce((s,d)=>s+daily[d].cal,0) / daysCount,
+  pro: last7Days.reduce((s,d)=>s+daily[d].pro,0) / daysCount,
+  carb:last7Days.reduce((s,d)=>s+daily[d].carb,0) / daysCount,
+  fat: last7Days.reduce((s,d)=>s+daily[d].fat,0) / daysCount,
+  fiber:last7Days.reduce((s,d)=>s+daily[d].fiber,0) / daysCount,
+  iron:last7Days.reduce((s,d)=>s+daily[d].iron,0) / daysCount
 };
 
 avgStats.innerHTML +=
-`<br><b>7-Day</b> 
+`<br><b>7-Day Daily Average</b><br>
 Calories <span style="color:${color(r7.cal,goalCalories.value)}">${round(r7.cal)}/${goalCalories.value}</span> |
 Protein <span style="color:${color(r7.pro,goalProtein.value)}">${round(r7.pro)}/${goalProtein.value}</span> |
 Carbs <span style="color:${color(r7.carb,goalCarbs.value)}">${round(r7.carb)}/${goalCarbs.value}</span> |
@@ -301,7 +327,7 @@ Iron <span style="color:${color(r7.iron,goalIron.value)}">${round(r7.iron)}/${go
     }
   });
 }
-
+<div style="color:gray;">Version 30 ✅</div>
 loadData();
 </script>
 
